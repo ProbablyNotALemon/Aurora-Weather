@@ -6,6 +6,7 @@ const state = {
     latitude: 51.5072,
     longitude: -0.1276,
     timezone: "Europe/London",
+    source: "City search",
   },
   forecast: null,
 };
@@ -51,10 +52,22 @@ const els = {
   precipChance: document.querySelector("#precipChance"),
   forecastSummary: document.querySelector("#forecastSummary"),
   windDirection: document.querySelector("#windDirection"),
+  comfortScore: document.querySelector("#comfortScore"),
+  visibilityLabel: document.querySelector("#visibilityLabel"),
+  stormRisk: document.querySelector("#stormRisk"),
+  radarMoisture: document.querySelector("#radarMoisture"),
+  radarPressure: document.querySelector("#radarPressure"),
+  radarCloud: document.querySelector("#radarCloud"),
+  alertStatus: document.querySelector("#alertStatus"),
+  alertStack: document.querySelector("#alertStack"),
+  locationSource: document.querySelector("#locationSource"),
   hourlyStrip: document.querySelector("#hourlyStrip"),
   detailGrid: document.querySelector("#detailGrid"),
   weekList: document.querySelector("#weekList"),
   toast: document.querySelector("#toast"),
+  railItems: document.querySelectorAll(".rail-item"),
+  sections: document.querySelectorAll("[data-view-section]"),
+  settingTiles: document.querySelectorAll("[data-unit-choice]"),
 };
 
 function toF(value) {
@@ -87,6 +100,36 @@ function describe(code) {
   return weatherCodes[code] || ["Seasonal weather", "◌", "clear"];
 }
 
+function isUkPostcode(query) {
+  return /^[A-Z]{1,2}\d[A-Z\d]?\s*\d[A-Z]{2}$/i.test(query.trim());
+}
+
+function cleanPostcode(query) {
+  return query.trim().toUpperCase().replace(/\s+/g, "");
+}
+
+function bestPostcodeName(result) {
+  const generic = [
+    "unparished area",
+    "unparished",
+    "england",
+    "scotland",
+    "wales",
+    "northern ireland",
+  ];
+  const options = [
+    result.admin_ward,
+    result.parish,
+    result.parliamentary_constituency,
+    result.admin_district,
+    result.region,
+  ].filter(Boolean);
+  return options.find((value) => {
+    const lower = value.toLowerCase();
+    return !generic.some((term) => lower.includes(term));
+  }) || result.admin_district || "UK postcode";
+}
+
 function showToast(message) {
   els.toast.textContent = message;
   els.toast.classList.add("show");
@@ -95,6 +138,8 @@ function showToast(message) {
 }
 
 async function searchPlace(query) {
+  if (isUkPostcode(query)) return searchPostcode(query);
+
   const params = new URLSearchParams({
     name: query,
     count: "1",
@@ -112,6 +157,34 @@ async function searchPlace(query) {
     latitude: result.latitude,
     longitude: result.longitude,
     timezone: result.timezone,
+    source: "City search",
+  };
+}
+
+async function searchPostcode(query) {
+  const postcode = cleanPostcode(query);
+  const response = await fetch(`https://api.postcodes.io/postcodes/${encodeURIComponent(postcode)}`);
+  if (!response.ok) throw new Error("No matching UK postcode found");
+  const data = await response.json();
+  const result = data.result;
+  if (!result?.latitude || !result?.longitude) throw new Error("That postcode could not be located");
+
+  let nearby = null;
+  try {
+    nearby = await reversePlace(result.latitude, result.longitude);
+  } catch (error) {
+    nearby = null;
+  }
+
+  const name = bestPostcodeName(result);
+  const district = result.admin_district && result.admin_district !== name ? `, ${result.admin_district}` : "";
+  return {
+    name,
+    country: `United Kingdom${district}`,
+    latitude: result.latitude,
+    longitude: result.longitude,
+    timezone: nearby?.timezone || "Europe/London",
+    source: `Postcode ${result.postcode}`,
   };
 }
 
@@ -134,6 +207,7 @@ async function reversePlace(latitude, longitude) {
     latitude,
     longitude,
     timezone: result.timezone,
+    source: "Current location",
   };
 }
 
@@ -223,6 +297,29 @@ function windCompass(degrees) {
   return labels[Math.round(degrees / 45) % 8];
 }
 
+function comfortLabel(current, daily) {
+  const humidity = current.relative_humidity_2m;
+  const wind = current.wind_speed_10m;
+  const rain = daily.precipitation_probability_max[0];
+  if (rain > 70 || wind > 42) return "Rough";
+  if (humidity > 82 || rain > 45 || wind > 30) return "Changeable";
+  if (humidity < 70 && wind < 24) return "Excellent";
+  return "Comfortable";
+}
+
+function visibilityLabel(current) {
+  if (current.cloud_cover > 82 || current.relative_humidity_2m > 88) return "Muted";
+  if (current.cloud_cover > 55) return "Soft";
+  return "Crisp";
+}
+
+function stormRisk(current, daily) {
+  const code = current.weather_code;
+  if (code >= 95 || daily.precipitation_probability_max[0] > 76 || current.wind_speed_10m > 45) return "High";
+  if (daily.precipitation_probability_max[0] > 42 || current.wind_speed_10m > 30) return "Medium";
+  return "Low";
+}
+
 function renderDetails(current, daily) {
   const details = [
     ["Humidity", `${current.relative_humidity_2m}%`, "Water in the air", current.relative_humidity_2m],
@@ -276,7 +373,58 @@ function renderWeek(daily) {
   els.weekList.innerHTML = rows.join("");
 }
 
+function renderAlerts(current, daily) {
+  const risks = [
+    {
+      level: stormRisk(current, daily),
+      title: "Storm potential",
+      body: `${daily.precipitation_probability_max[0]}% peak precipitation with ${speed(daily.wind_speed_10m_max[0])} gust potential.`,
+    },
+    {
+      level: daily.uv_index_max[0] >= 7 ? "High" : daily.uv_index_max[0] >= 4 ? "Medium" : "Low",
+      title: "UV exposure",
+      body: `Peak UV index is ${Math.round(daily.uv_index_max[0])}.`,
+    },
+    {
+      level: current.relative_humidity_2m > 84 ? "Medium" : "Low",
+      title: "Humidity load",
+      body: `${current.relative_humidity_2m}% humidity with ${current.cloud_cover}% cloud cover.`,
+    },
+  ];
+
+  const highest = risks.some((item) => item.level === "High") ? "Active risks" : "All clear";
+  els.alertStatus.textContent = highest;
+  els.alertStack.innerHTML = risks.map((item) => `
+    <article class="alert-card ${item.level.toLowerCase()}">
+      <span>${item.level}</span>
+      <div>
+        <strong>${item.title}</strong>
+        <p>${item.body}</p>
+      </div>
+    </article>
+  `).join("");
+}
+
+function setActiveView(view) {
+  els.railItems.forEach((item) => {
+    const isActive = item.dataset.view === view;
+    item.classList.toggle("active", isActive);
+    item.setAttribute("aria-current", isActive ? "page" : "false");
+  });
+  const section = document.querySelector(`[data-view-section="${view}"]`);
+  if (section) section.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function highlightView(view) {
+  els.railItems.forEach((item) => {
+    const isActive = item.dataset.view === view;
+    item.classList.toggle("active", isActive);
+    item.setAttribute("aria-current", isActive ? "page" : "false");
+  });
+}
+
 function render() {
+  if (!state.forecast) return;
   const data = state.forecast;
   const current = data.current;
   const daily = data.daily;
@@ -293,10 +441,18 @@ function render() {
   els.precipChance.textContent = `Rain chance ${daily.precipitation_probability_max[0]}%`;
   els.forecastSummary.textContent = `${condition} with a high of ${temp(daily.temperature_2m_max[0])}`;
   els.windDirection.textContent = `${windCompass(current.wind_direction_10m)} wind`;
+  els.comfortScore.textContent = comfortLabel(current, daily);
+  els.visibilityLabel.textContent = visibilityLabel(current);
+  els.stormRisk.textContent = stormRisk(current, daily);
+  els.radarMoisture.textContent = `Moisture ${current.relative_humidity_2m}%`;
+  els.radarPressure.textContent = `Pressure ${Math.round(current.pressure_msl)} hPa`;
+  els.radarCloud.textContent = `Cloud ${current.cloud_cover}%`;
+  els.locationSource.textContent = state.place.source || "City search";
 
   renderHourly(data.hourly);
   renderDetails(current, daily);
   renderWeek(daily);
+  renderAlerts(current, daily);
 }
 
 async function loadWeather(place, toastMessage) {
@@ -342,6 +498,7 @@ els.celsiusBtn.addEventListener("click", () => {
   state.unit = "c";
   els.celsiusBtn.classList.add("active");
   els.fahrenheitBtn.classList.remove("active");
+  els.settingTiles.forEach((tile) => tile.classList.toggle("active", tile.dataset.unitChoice === "c"));
   render();
 });
 
@@ -349,7 +506,30 @@ els.fahrenheitBtn.addEventListener("click", () => {
   state.unit = "f";
   els.fahrenheitBtn.classList.add("active");
   els.celsiusBtn.classList.remove("active");
+  els.settingTiles.forEach((tile) => tile.classList.toggle("active", tile.dataset.unitChoice === "f"));
   render();
+});
+
+els.railItems.forEach((item) => {
+  item.addEventListener("click", () => setActiveView(item.dataset.view));
+});
+
+if ("IntersectionObserver" in window) {
+  const observer = new IntersectionObserver((entries) => {
+    const visible = entries
+      .filter((entry) => entry.isIntersecting)
+      .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+    if (visible) highlightView(visible.target.dataset.viewSection);
+  }, { threshold: [0.35, 0.6] });
+
+  els.sections.forEach((section) => observer.observe(section));
+}
+
+els.settingTiles.forEach((tile) => {
+  tile.addEventListener("click", () => {
+    if (tile.dataset.unitChoice === "c") els.celsiusBtn.click();
+    if (tile.dataset.unitChoice === "f") els.fahrenheitBtn.click();
+  });
 });
 
 loadWeather(state.place);

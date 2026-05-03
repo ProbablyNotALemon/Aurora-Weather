@@ -20,10 +20,10 @@
           <span>Aurora</span>
         </div>
         <nav class="rail-nav" aria-label="Weather views">
-          <button class="rail-item active" type="button" title="Dashboard">☀</button>
-          <button class="rail-item" type="button" title="Maps">⌖</button>
-          <button class="rail-item" type="button" title="Alerts">!</button>
-          <button class="rail-item" type="button" title="Settings">⚙</button>
+          <button class="rail-item active" type="button" title="Dashboard" data-view="dashboard" aria-current="page">☀</button>
+          <button class="rail-item" type="button" title="Maps" data-view="maps">⌖</button>
+          <button class="rail-item" type="button" title="Alerts" data-view="alerts">!</button>
+          <button class="rail-item" type="button" title="Settings" data-view="settings">⚙</button>
         </nav>
       </aside>
 
@@ -34,7 +34,7 @@
             <input
               id="cityInput"
               type="search"
-              placeholder="Search city, region, or country"
+              placeholder="Search city, postcode, region, or country"
               autocomplete="off"
               aria-label="Search location"
             />
@@ -49,7 +49,8 @@
           </div>
         </header>
 
-        <section class="hero">
+        <section class="hero" id="dashboardView" data-view-section="dashboard">
+          <div class="hero-shine"></div>
           <div class="hero-copy">
             <p class="eyebrow" id="updatedAt">Live forecast</p>
             <h1 id="locationName">London, United Kingdom</h1>
@@ -64,6 +65,20 @@
               <span id="highLow">H 21° / L 12°</span>
               <span id="sunTimes">Sunrise 05:28 · Sunset 20:28</span>
               <span id="precipChance">Rain chance 8%</span>
+            </div>
+            <div class="comfort-band">
+              <div>
+                <span>Air feel</span>
+                <strong id="comfortScore">Excellent</strong>
+              </div>
+              <div>
+                <span>Visibility</span>
+                <strong id="visibilityLabel">Crisp</strong>
+              </div>
+              <div>
+                <span>Storm risk</span>
+                <strong id="stormRisk">Low</strong>
+              </div>
             </div>
           </div>
           <div class="weather-orbit" aria-hidden="true">
@@ -87,7 +102,7 @@
             <div class="hourly-strip" id="hourlyStrip"></div>
           </div>
 
-          <div class="panel map-panel">
+          <div class="panel map-panel" id="mapsView" data-view-section="maps">
             <div class="panel-heading">
               <div>
                 <p class="section-kicker">Atmosphere</p>
@@ -101,6 +116,11 @@
               <div class="radar-storm storm-a"></div>
               <div class="radar-storm storm-b"></div>
               <div class="map-pin">⌖</div>
+            </div>
+            <div class="radar-readouts">
+              <span id="radarMoisture">Moisture 58%</span>
+              <span id="radarPressure">Pressure 1018 hPa</span>
+              <span id="radarCloud">Cloud 24%</span>
             </div>
           </div>
 
@@ -122,6 +142,45 @@
               </div>
             </div>
             <div class="week-list" id="weekList"></div>
+          </div>
+
+          <div class="panel alerts-panel" id="alertsView" data-view-section="alerts">
+            <div class="panel-heading">
+              <div>
+                <p class="section-kicker">Risk Desk</p>
+                <h2>Weather Alerts</h2>
+              </div>
+              <span id="alertStatus">Monitoring</span>
+            </div>
+            <div class="alert-stack" id="alertStack"></div>
+          </div>
+
+          <div class="panel settings-panel" id="settingsView" data-view-section="settings">
+            <div class="panel-heading">
+              <div>
+                <p class="section-kicker">Control Room</p>
+                <h2>Preferences</h2>
+              </div>
+              <span id="locationSource">City search</span>
+            </div>
+            <div class="settings-grid">
+              <button class="setting-tile active" type="button" data-unit-choice="c">
+                <span>Metric</span>
+                <strong>°C · km/h</strong>
+              </button>
+              <button class="setting-tile" type="button" data-unit-choice="f">
+                <span>Imperial</span>
+                <strong>°F · mph</strong>
+              </button>
+              <div class="setting-tile passive">
+                <span>Forecast model</span>
+                <strong>Open-Meteo</strong>
+              </div>
+              <div class="setting-tile passive">
+                <span>Postcodes</span>
+                <strong>UK enabled</strong>
+              </div>
+            </div>
           </div>
         </section>
       </main>
