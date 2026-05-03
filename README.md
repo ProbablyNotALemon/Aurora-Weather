@@ -12,7 +12,7 @@ Aurora Weather is currently in beta. The core forecast, UK postcode lookup, and 
 - Real 7-day and hourly weather forecasts
 - Current location weather lookup
 - UK postcode lookup with town/ward-style display names where available
-- Celsius and Fahrenheit toggle
+- Independent metric controls for temperature, wind speed, pressure, and rainfall
 - Premium responsive glass UI with animated weather visuals
 - Working side navigation for dashboard, radar, alerts, and settings
 - Offline/sample fallback forecast if the live API cannot be reached

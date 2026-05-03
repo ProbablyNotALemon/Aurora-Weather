@@ -1,5 +1,8 @@
 const state = {
-  unit: "c",
+  tempUnit: "c",
+  windUnit: "kmh",
+  pressureUnit: "hpa",
+  precipUnit: "mm",
   place: {
     name: "London",
     country: "United Kingdom",
@@ -67,7 +70,7 @@ const els = {
   toast: document.querySelector("#toast"),
   railItems: document.querySelectorAll(".rail-item"),
   sections: document.querySelectorAll("[data-view-section]"),
-  settingTiles: document.querySelectorAll("[data-unit-choice]"),
+  settingTiles: document.querySelectorAll("[data-preference]"),
 };
 
 function toF(value) {
@@ -75,13 +78,23 @@ function toF(value) {
 }
 
 function temp(value) {
-  const output = state.unit === "f" ? toF(value) : value;
+  const output = state.tempUnit === "f" ? toF(value) : value;
   return `${Math.round(output)}°`;
 }
 
 function speed(value) {
-  if (state.unit === "f") return `${Math.round(value * 0.621371)} mph`;
+  if (state.windUnit === "mph") return `${Math.round(value * 0.621371)} mph`;
   return `${Math.round(value)} km/h`;
+}
+
+function pressure(value) {
+  if (state.pressureUnit === "inhg") return `${(value * 0.02953).toFixed(2)} inHg`;
+  return `${Math.round(value)} hPa`;
+}
+
+function precipitation(value) {
+  if (state.precipUnit === "in") return `${(value * 0.03937).toFixed(2)} in`;
+  return `${Number(value).toFixed(value >= 10 ? 0 : 1)} mm`;
 }
 
 function formatTime(value, options = {}) {
@@ -324,10 +337,10 @@ function renderDetails(current, daily) {
   const details = [
     ["Humidity", `${current.relative_humidity_2m}%`, "Water in the air", current.relative_humidity_2m],
     ["Wind", speed(current.wind_speed_10m), `${windCompass(current.wind_direction_10m)} direction`, Math.min(100, current.wind_speed_10m * 2)],
-    ["Pressure", `${Math.round(current.pressure_msl)} hPa`, "Sea-level pressure", 58],
+    ["Pressure", pressure(current.pressure_msl), "Sea-level pressure", 58],
     ["Cloud Cover", `${current.cloud_cover}%`, "Sky coverage", current.cloud_cover],
     ["UV Index", `${Math.round(daily.uv_index_max[0])}`, "Peak today", Math.min(100, daily.uv_index_max[0] * 12)],
-    ["Rainfall", `${current.precipitation} mm`, "Current intensity", Math.min(100, current.precipitation * 25)],
+    ["Rainfall", precipitation(current.precipitation), "Current intensity", Math.min(100, current.precipitation * 25)],
   ];
 
   els.detailGrid.innerHTML = details.map(([label, value, meta, meter]) => `
@@ -423,6 +436,20 @@ function highlightView(view) {
   });
 }
 
+function updatePreferenceButtons() {
+  els.celsiusBtn.classList.toggle("active", state.tempUnit === "c");
+  els.fahrenheitBtn.classList.toggle("active", state.tempUnit === "f");
+  els.settingTiles.forEach((tile) => {
+    tile.classList.toggle("active", state[tile.dataset.preference] === tile.dataset.value);
+  });
+}
+
+function setPreference(key, value) {
+  state[key] = value;
+  updatePreferenceButtons();
+  render();
+}
+
 function render() {
   if (!state.forecast) return;
   const data = state.forecast;
@@ -445,7 +472,7 @@ function render() {
   els.visibilityLabel.textContent = visibilityLabel(current);
   els.stormRisk.textContent = stormRisk(current, daily);
   els.radarMoisture.textContent = `Moisture ${current.relative_humidity_2m}%`;
-  els.radarPressure.textContent = `Pressure ${Math.round(current.pressure_msl)} hPa`;
+  els.radarPressure.textContent = `Pressure ${pressure(current.pressure_msl)}`;
   els.radarCloud.textContent = `Cloud ${current.cloud_cover}%`;
   els.locationSource.textContent = state.place.source || "City search";
 
@@ -459,10 +486,12 @@ async function loadWeather(place, toastMessage) {
   try {
     state.place = place;
     state.forecast = await fetchForecast(place);
+    updatePreferenceButtons();
     render();
     if (toastMessage) showToast(toastMessage);
   } catch (error) {
     state.forecast = fallbackForecast();
+    updatePreferenceButtons();
     render();
     showToast("Live weather could not be reached, so Aurora is showing a polished sample forecast.");
   }
@@ -495,19 +524,11 @@ els.locationBtn.addEventListener("click", () => {
 });
 
 els.celsiusBtn.addEventListener("click", () => {
-  state.unit = "c";
-  els.celsiusBtn.classList.add("active");
-  els.fahrenheitBtn.classList.remove("active");
-  els.settingTiles.forEach((tile) => tile.classList.toggle("active", tile.dataset.unitChoice === "c"));
-  render();
+  setPreference("tempUnit", "c");
 });
 
 els.fahrenheitBtn.addEventListener("click", () => {
-  state.unit = "f";
-  els.fahrenheitBtn.classList.add("active");
-  els.celsiusBtn.classList.remove("active");
-  els.settingTiles.forEach((tile) => tile.classList.toggle("active", tile.dataset.unitChoice === "f"));
-  render();
+  setPreference("tempUnit", "f");
 });
 
 els.railItems.forEach((item) => {
@@ -527,8 +548,7 @@ if ("IntersectionObserver" in window) {
 
 els.settingTiles.forEach((tile) => {
   tile.addEventListener("click", () => {
-    if (tile.dataset.unitChoice === "c") els.celsiusBtn.click();
-    if (tile.dataset.unitChoice === "f") els.fahrenheitBtn.click();
+    setPreference(tile.dataset.preference, tile.dataset.value);
   });
 });
 
