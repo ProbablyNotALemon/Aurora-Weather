@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Aurora Weather</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell" data-weather="clear">
+      <aside class="rail">
+        <div class="brand">
+          <span class="brand-mark">A</span>
+          <span>Aurora</span>
+        </div>
+        <nav class="rail-nav" aria-label="Weather views">
+          <button class="rail-item active" type="button" title="Dashboard">☀</button>
+          <button class="rail-item" type="button" title="Maps">⌖</button>
+          <button class="rail-item" type="button" title="Alerts">!</button>
+          <button class="rail-item" type="button" title="Settings">⚙</button>
+        </nav>
+      </aside>
+
+      <main class="dashboard">
+        <header class="topbar">
+          <form class="search" id="searchForm">
+            <span class="search-icon">⌕</span>
+            <input
+              id="cityInput"
+              type="search"
+              placeholder="Search city, region, or country"
+              autocomplete="off"
+              aria-label="Search location"
+            />
+            <button type="submit">Search</button>
+          </form>
+          <div class="top-actions">
+            <button class="ghost-button" id="locationBtn" type="button">Use my location</button>
+            <div class="unit-toggle" aria-label="Temperature units">
+              <button class="active" id="celsiusBtn" type="button">°C</button>
+              <button id="fahrenheitBtn" type="button">°F</button>
+            </div>
+          </div>
+        </header>
+
+        <section class="hero">
+          <div class="hero-copy">
+            <p class="eyebrow" id="updatedAt">Live forecast</p>
+            <h1 id="locationName">London, United Kingdom</h1>
+            <div class="temperature-row">
+              <span class="temperature" id="currentTemp">18°</span>
+              <div>
+                <p class="condition" id="conditionText">Clear sky</p>
+                <p class="feels" id="feelsLike">Feels like 17° · Light breeze</p>
+              </div>
+            </div>
+            <div class="hero-metrics">
+              <span id="highLow">H 21° / L 12°</span>
+              <span id="sunTimes">Sunrise 05:28 · Sunset 20:28</span>
+              <span id="precipChance">Rain chance 8%</span>
+            </div>
+          </div>
+          <div class="weather-orbit" aria-hidden="true">
+            <div class="sun-core"></div>
+            <div class="cloud cloud-one"></div>
+            <div class="cloud cloud-two"></div>
+            <div class="rain rain-one"></div>
+            <div class="rain rain-two"></div>
+          </div>
+        </section>
+
+        <section class="content-grid">
+          <div class="panel forecast-panel">
+            <div class="panel-heading">
+              <div>
+                <p class="section-kicker">Next 24 hours</p>
+                <h2>Hourly Forecast</h2>
+              </div>
+              <span id="forecastSummary">Clear conditions continue</span>
+            </div>
+            <div class="hourly-strip" id="hourlyStrip"></div>
+          </div>
+
+          <div class="panel map-panel">
+            <div class="panel-heading">
+              <div>
+                <p class="section-kicker">Atmosphere</p>
+                <h2>Weather Radar</h2>
+              </div>
+              <span id="windDirection">NW wind</span>
+            </div>
+            <div class="radar">
+              <div class="radar-grid"></div>
+              <div class="radar-pulse"></div>
+              <div class="radar-storm storm-a"></div>
+              <div class="radar-storm storm-b"></div>
+              <div class="map-pin">⌖</div>
+            </div>
+          </div>
+
+          <div class="panel details-panel">
+            <div class="panel-heading">
+              <div>
+                <p class="section-kicker">Today</p>
+                <h2>Conditions</h2>
+              </div>
+            </div>
+            <div class="detail-grid" id="detailGrid"></div>
+          </div>
+
+          <div class="panel week-panel">
+            <div class="panel-heading">
+              <div>
+                <p class="section-kicker">Outlook</p>
+                <h2>7-Day Forecast</h2>
+              </div>
+            </div>
+            <div class="week-list" id="weekList"></div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script src="app.js"></script>
+  </body>
+</html>
