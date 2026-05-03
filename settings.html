@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Aurora Weather Settings</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="settings.css" />
+  </head>
+  <body>
+    <main class="settings-shell" data-theme="atmospheric">
+      <header class="settings-hero">
+        <a class="back-link" href="index.html">← Back to weather</a>
+        <div>
+          <p class="eyebrow">Aurora Control Room</p>
+          <h1>Settings</h1>
+          <p class="hero-copy">Tailor the forecast engine, metrics, visual style, alerts, and saved places to your exact setup.</p>
+        </div>
+        <div class="status-card">
+          <span>Saved profile</span>
+          <strong id="profileSummary">Best Match · °C · km/h</strong>
+        </div>
+      </header>
+
+      <section class="settings-layout">
+        <aside class="settings-menu" aria-label="Settings sections">
+          <a href="#forecast">Forecast</a>
+          <a href="#metrics">Metrics</a>
+          <a href="#display">Display</a>
+          <a href="#automation">Automation</a>
+          <a href="#places">Places</a>
+          <a href="#data">Data</a>
+        </aside>
+
+        <div class="settings-content">
+          <section class="settings-panel" id="forecast">
+            <div class="panel-heading">
+              <div>
+                <p class="eyebrow">Forecast Engine</p>
+                <h2>Model Selection</h2>
+              </div>
+              <span id="modelSummary">Best Match</span>
+            </div>
+            <div class="option-grid">
+              <button class="option-card" type="button" data-preference="forecastModel" data-value="best_match">
+                <span>Balanced</span>
+                <strong>Best Match</strong>
+                <p>Lets Open-Meteo choose the strongest model for the location.</p>
+              </button>
+              <button class="option-card" type="button" data-preference="forecastModel" data-value="ukmo_seamless">
+                <span>UK focused</span>
+                <strong>UKMO</strong>
+                <p>Good for UK weather behaviour and fast-changing local conditions.</p>
+              </button>
+              <button class="option-card" type="button" data-preference="forecastModel" data-value="ecmwf_ifs04">
+                <span>Global premium</span>
+                <strong>ECMWF</strong>
+                <p>A high-end global model for polished medium-range forecasts.</p>
+              </button>
+              <button class="option-card" type="button" data-preference="forecastModel" data-value="gfs_seamless">
+                <span>Long range</span>
+                <strong>GFS</strong>
+                <p>Useful when you care more about broader patterns and outlooks.</p>
+              </button>
+            </div>
+          </section>
+
+          <section class="settings-panel" id="metrics">
+            <div class="panel-heading">
+              <div>
+                <p class="eyebrow">Metrics</p>
+                <h2>Units</h2>
+              </div>
+            </div>
+            <div class="option-grid compact">
+              <button class="option-card" type="button" data-preference="tempUnit" data-value="c"><span>Temperature</span><strong>°C</strong><p>Celsius</p></button>
+              <button class="option-card" type="button" data-preference="tempUnit" data-value="f"><span>Temperature</span><strong>°F</strong><p>Fahrenheit</p></button>
+              <button class="option-card" type="button" data-preference="windUnit" data-value="kmh"><span>Wind</span><strong>km/h</strong><p>Kilometres per hour</p></button>
+              <button class="option-card" type="button" data-preference="windUnit" data-value="mph"><span>Wind</span><strong>mph</strong><p>Miles per hour</p></button>
+              <button class="option-card" type="button" data-preference="pressureUnit" data-value="hpa"><span>Pressure</span><strong>hPa</strong><p>Hectopascals</p></button>
+              <button class="option-card" type="button" data-preference="pressureUnit" data-value="inhg"><span>Pressure</span><strong>inHg</strong><p>Inches of mercury</p></button>
+              <button class="option-card" type="button" data-preference="precipUnit" data-value="mm"><span>Rainfall</span><strong>mm</strong><p>Millimetres</p></button>
+              <button class="option-card" type="button" data-preference="precipUnit" data-value="in"><span>Rainfall</span><strong>in</strong><p>Inches</p></button>
+            </div>
+          </section>
+
+          <section class="settings-panel" id="display">
+            <div class="panel-heading">
+              <div>
+                <p class="eyebrow">Experience</p>
+                <h2>Display</h2>
+              </div>
+            </div>
+            <div class="option-grid">
+              <button class="option-card" type="button" data-preference="forecastHours" data-value="24"><span>Hourly range</span><strong>24 hours</strong><p>Compact daily view.</p></button>
+              <button class="option-card" type="button" data-preference="forecastHours" data-value="48"><span>Hourly range</span><strong>48 hours</strong><p>Two-day planning view.</p></button>
+              <button class="option-card" type="button" data-preference="forecastHours" data-value="72"><span>Hourly range</span><strong>72 hours</strong><p>Extended outlook view.</p></button>
+              <button class="option-card" type="button" data-preference="themeMode" data-value="atmospheric"><span>Theme</span><strong>Atmospheric</strong><p>Premium glass weather interface.</p></button>
+              <button class="option-card" type="button" data-preference="themeMode" data-value="midnight"><span>Theme</span><strong>Midnight</strong><p>Darker high-contrast style.</p></button>
+              <button class="option-card" type="button" data-preference="themeMode" data-value="daylight"><span>Theme</span><strong>Daylight</strong><p>Brighter blue-green style.</p></button>
+            </div>
+          </section>
+
+          <section class="settings-panel" id="automation">
+            <div class="panel-heading">
+              <div>
+                <p class="eyebrow">Automation</p>
+                <h2>Updates & Alerts</h2>
+              </div>
+            </div>
+            <div class="option-grid">
+              <button class="option-card" type="button" data-preference="refreshMins" data-value="0"><span>Auto refresh</span><strong>Off</strong><p>Manual updates only.</p></button>
+              <button class="option-card" type="button" data-preference="refreshMins" data-value="15"><span>Auto refresh</span><strong>15 min</strong><p>Good for active weather days.</p></button>
+              <button class="option-card" type="button" data-preference="refreshMins" data-value="60"><span>Auto refresh</span><strong>Hourly</strong><p>Balanced background refresh.</p></button>
+              <button class="option-card" type="button" data-preference="alertsSensitivity" data-value="sensitive"><span>Alerts</span><strong>Sensitive</strong><p>Earlier warnings for rain and wind.</p></button>
+              <button class="option-card" type="button" data-preference="alertsSensitivity" data-value="normal"><span>Alerts</span><strong>Normal</strong><p>Recommended everyday balance.</p></button>
+              <button class="option-card" type="button" data-preference="alertsSensitivity" data-value="calm"><span>Alerts</span><strong>Calm</strong><p>Only highlights bigger risks.</p></button>
+            </div>
+          </section>
+
+          <section class="settings-panel" id="places">
+            <div class="panel-heading">
+              <div>
+                <p class="eyebrow">Saved</p>
+                <h2>Places</h2>
+              </div>
+              <span id="placesSummary">0 saved</span>
+            </div>
+            <div class="places-list" id="settingsPlaces"></div>
+          </section>
+
+          <section class="settings-panel danger-zone" id="data">
+            <div class="panel-heading">
+              <div>
+                <p class="eyebrow">Data</p>
+                <h2>Reset</h2>
+              </div>
+            </div>
+            <div class="data-actions">
+              <button class="danger-button" id="resetSettings" type="button">Reset all settings</button>
+              <span id="saveNotice">Changes save automatically.</span>
+            </div>
+          </section>
+        </div>
+      </section>
+    </main>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script src="settings.js"></script>
+  </body>
+</html>

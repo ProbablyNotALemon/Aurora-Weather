@@ -90,7 +90,7 @@ const els = {
   detailGrid: document.querySelector("#detailGrid"),
   weekList: document.querySelector("#weekList"),
   toast: document.querySelector("#toast"),
-  railItems: document.querySelectorAll(".rail-item"),
+  railItems: document.querySelectorAll(".rail-item[data-view]"),
   sections: document.querySelectorAll("[data-view-section]"),
   settingTiles: document.querySelectorAll("[data-preference]"),
 };
