@@ -3,6 +3,13 @@ const state = {
   windUnit: "kmh",
   pressureUnit: "hpa",
   precipUnit: "mm",
+  forecastModel: "best_match",
+  forecastHours: "24",
+  refreshMins: "0",
+  alertsSensitivity: "normal",
+  themeMode: "atmospheric",
+  favorites: [],
+  refreshTimer: null,
   place: {
     name: "London",
     country: "United Kingdom",
@@ -12,6 +19,13 @@ const state = {
     source: "City search",
   },
   forecast: null,
+};
+
+const modelLabels = {
+  best_match: ["Best Match", "Balanced model blend"],
+  ukmo_seamless: ["UKMO", "UK-focused model"],
+  ecmwf_ifs04: ["ECMWF", "Global premium model"],
+  gfs_seamless: ["GFS", "Long-range model"],
 };
 
 const weatherCodes = {
@@ -45,6 +59,7 @@ const els = {
   locationBtn: document.querySelector("#locationBtn"),
   celsiusBtn: document.querySelector("#celsiusBtn"),
   fahrenheitBtn: document.querySelector("#fahrenheitBtn"),
+  savePlaceBtn: document.querySelector("#savePlaceBtn"),
   updatedAt: document.querySelector("#updatedAt"),
   locationName: document.querySelector("#locationName"),
   currentTemp: document.querySelector("#currentTemp"),
@@ -64,6 +79,13 @@ const els = {
   alertStatus: document.querySelector("#alertStatus"),
   alertStack: document.querySelector("#alertStack"),
   locationSource: document.querySelector("#locationSource"),
+  hourlyKicker: document.querySelector("#hourlyKicker"),
+  modelBadge: document.querySelector("#modelBadge"),
+  insightGrid: document.querySelector("#insightGrid"),
+  daylightLabel: document.querySelector("#daylightLabel"),
+  sunStats: document.querySelector("#sunStats"),
+  placesCount: document.querySelector("#placesCount"),
+  placesList: document.querySelector("#placesList"),
   hourlyStrip: document.querySelector("#hourlyStrip"),
   detailGrid: document.querySelector("#detailGrid"),
   weekList: document.querySelector("#weekList"),
@@ -72,6 +94,43 @@ const els = {
   sections: document.querySelectorAll("[data-view-section]"),
   settingTiles: document.querySelectorAll("[data-preference]"),
 };
+
+function loadSavedState() {
+  try {
+    const saved = JSON.parse(localStorage.getItem("auroraWeatherPrefs") || "{}");
+    Object.assign(state, saved);
+    state.favorites = Array.isArray(saved.favorites) ? saved.favorites : [];
+  } catch (error) {
+    state.favorites = [];
+  }
+}
+
+function saveState() {
+  const {
+    tempUnit,
+    windUnit,
+    pressureUnit,
+    precipUnit,
+    forecastModel,
+    forecastHours,
+    refreshMins,
+    alertsSensitivity,
+    themeMode,
+    favorites,
+  } = state;
+  localStorage.setItem("auroraWeatherPrefs", JSON.stringify({
+    tempUnit,
+    windUnit,
+    pressureUnit,
+    precipUnit,
+    forecastModel,
+    forecastHours,
+    refreshMins,
+    alertsSensitivity,
+    themeMode,
+    favorites,
+  }));
+}
 
 function toF(value) {
   return value * 9 / 5 + 32;
@@ -234,7 +293,12 @@ async function fetchForecast(place) {
     daily: "weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max,precipitation_probability_max,wind_speed_10m_max",
     forecast_days: "7",
   });
-  const response = await fetch(`https://api.open-meteo.com/v1/forecast?${params}`);
+  if (state.forecastModel !== "best_match") params.set("models", state.forecastModel);
+  let response = await fetch(`https://api.open-meteo.com/v1/forecast?${params}`);
+  if (!response.ok && state.forecastModel !== "best_match") {
+    params.delete("models");
+    response = await fetch(`https://api.open-meteo.com/v1/forecast?${params}`);
+  }
   if (!response.ok) throw new Error("Forecast request failed");
   return response.json();
 }
@@ -327,10 +391,82 @@ function visibilityLabel(current) {
 }
 
 function stormRisk(current, daily) {
+  const sensitivity = state.alertsSensitivity;
+  const highRain = sensitivity === "sensitive" ? 58 : sensitivity === "calm" ? 86 : 76;
+  const mediumRain = sensitivity === "sensitive" ? 28 : sensitivity === "calm" ? 56 : 42;
+  const highWind = sensitivity === "sensitive" ? 36 : sensitivity === "calm" ? 55 : 45;
+  const mediumWind = sensitivity === "sensitive" ? 22 : sensitivity === "calm" ? 38 : 30;
   const code = current.weather_code;
-  if (code >= 95 || daily.precipitation_probability_max[0] > 76 || current.wind_speed_10m > 45) return "High";
-  if (daily.precipitation_probability_max[0] > 42 || current.wind_speed_10m > 30) return "Medium";
+  if (code >= 95 || daily.precipitation_probability_max[0] > highRain || current.wind_speed_10m > highWind) return "High";
+  if (daily.precipitation_probability_max[0] > mediumRain || current.wind_speed_10m > mediumWind) return "Medium";
   return "Low";
+}
+
+function bestOutdoorWindow(hourly) {
+  let best = { score: -Infinity, time: hourly.time[0], temp: hourly.temperature_2m[0] };
+  hourly.time.slice(0, 24).forEach((time, index) => {
+    const rain = hourly.precipitation_probability[index] || 0;
+    const wind = hourly.wind_speed_10m[index] || 0;
+    const humidity = hourly.relative_humidity_2m[index] || 60;
+    const score = 100 - rain - wind * 1.5 - Math.abs(humidity - 55) * 0.5;
+    if (score > best.score) best = { score, time, temp: hourly.temperature_2m[index] };
+  });
+  return best;
+}
+
+function renderInsights(current, hourly, daily) {
+  const window = bestOutdoorWindow(hourly);
+  const rainPeak = Math.max(...hourly.precipitation_probability.slice(0, 24));
+  const windPeak = Math.max(...hourly.wind_speed_10m.slice(0, 24));
+  const uv = Math.round(daily.uv_index_max[0]);
+  const insights = [
+    ["Best time outside", formatTime(window.time), `${temp(window.temp)} with the clearest comfort score`],
+    ["Rain peak", `${rainPeak}%`, rainPeak > 55 ? "Carry a jacket or umbrella" : "Low interruption risk"],
+    ["Wind peak", speed(windPeak), windPeak > 32 ? "Exposed routes may feel breezy" : "Comfortable travel conditions"],
+    ["UV plan", `${uv} index`, uv >= 7 ? "Strong sun protection advised" : uv >= 4 ? "Moderate sun protection" : "Low exposure"],
+  ];
+  els.insightGrid.innerHTML = insights.map(([label, value, body]) => `
+    <article class="insight-card">
+      <span>${label}</span>
+      <strong>${value}</strong>
+      <p>${body}</p>
+    </article>
+  `).join("");
+}
+
+function renderSun(daily) {
+  const sunrise = formatTime(daily.sunrise[0]);
+  const sunset = formatTime(daily.sunset[0]);
+  const daylightMs = new Date(daily.sunset[0]) - new Date(daily.sunrise[0]);
+  const daylightHours = Math.max(0, daylightMs / 36e5);
+  els.daylightLabel.textContent = `${daylightHours.toFixed(1)} hours of daylight`;
+  els.sunStats.innerHTML = `
+    <span>Sunrise <strong>${sunrise}</strong></span>
+    <span>Sunset <strong>${sunset}</strong></span>
+    <span>UV max <strong>${Math.round(daily.uv_index_max[0])}</strong></span>
+  `;
+}
+
+function renderPlaces() {
+  els.placesCount.textContent = `${state.favorites.length} saved`;
+  if (!state.favorites.length) {
+    els.placesList.innerHTML = `
+      <div class="empty-places">
+        <strong>No saved places yet</strong>
+        <span>Search a place, then use Save place to build your watchlist.</span>
+      </div>
+    `;
+    return;
+  }
+  els.placesList.innerHTML = state.favorites.map((place, index) => `
+    <article class="place-card">
+      <button type="button" data-place-index="${index}">
+        <strong>${place.name}</strong>
+        <span>${place.country}</span>
+      </button>
+      <button class="remove-place" type="button" data-remove-place="${index}">×</button>
+    </article>
+  `).join("");
 }
 
 function renderDetails(current, daily) {
@@ -356,7 +492,8 @@ function renderDetails(current, daily) {
 }
 
 function renderHourly(hourly) {
-  const cards = hourly.time.slice(0, 24).map((time, index) => {
+  const range = Number(state.forecastHours);
+  const cards = hourly.time.slice(0, range).map((time, index) => {
     const [condition, icon] = describe(hourly.weather_code[index]);
     return `
       <article class="hour-card" title="${condition}">
@@ -439,14 +576,21 @@ function highlightView(view) {
 function updatePreferenceButtons() {
   els.celsiusBtn.classList.toggle("active", state.tempUnit === "c");
   els.fahrenheitBtn.classList.toggle("active", state.tempUnit === "f");
+  els.shell.dataset.theme = state.themeMode;
   els.settingTiles.forEach((tile) => {
     tile.classList.toggle("active", state[tile.dataset.preference] === tile.dataset.value);
   });
 }
 
-function setPreference(key, value) {
+async function setPreference(key, value) {
   state[key] = value;
+  saveState();
   updatePreferenceButtons();
+  scheduleRefresh();
+  if (key === "forecastModel") {
+    await loadWeather(state.place, `Forecast model changed to ${modelLabels[value]?.[0] || value}`);
+    return;
+  }
   render();
 }
 
@@ -468,6 +612,8 @@ function render() {
   els.precipChance.textContent = `Rain chance ${daily.precipitation_probability_max[0]}%`;
   els.forecastSummary.textContent = `${condition} with a high of ${temp(daily.temperature_2m_max[0])}`;
   els.windDirection.textContent = `${windCompass(current.wind_direction_10m)} wind`;
+  els.hourlyKicker.textContent = `Next ${state.forecastHours} hours`;
+  els.modelBadge.textContent = modelLabels[state.forecastModel]?.[0] || "Best Match";
   els.comfortScore.textContent = comfortLabel(current, daily);
   els.visibilityLabel.textContent = visibilityLabel(current);
   els.stormRisk.textContent = stormRisk(current, daily);
@@ -480,6 +626,9 @@ function render() {
   renderDetails(current, daily);
   renderWeek(daily);
   renderAlerts(current, daily);
+  renderInsights(current, data.hourly, daily);
+  renderSun(daily);
+  renderPlaces();
 }
 
 async function loadWeather(place, toastMessage) {
@@ -487,6 +636,7 @@ async function loadWeather(place, toastMessage) {
     state.place = place;
     state.forecast = await fetchForecast(place);
     updatePreferenceButtons();
+    saveState();
     render();
     if (toastMessage) showToast(toastMessage);
   } catch (error) {
@@ -508,6 +658,22 @@ els.form.addEventListener("submit", async (event) => {
   } catch (error) {
     showToast(error.message);
   }
+});
+
+els.savePlaceBtn.addEventListener("click", () => {
+  const exists = state.favorites.some((place) => (
+    Math.abs(place.latitude - state.place.latitude) < 0.001 &&
+    Math.abs(place.longitude - state.place.longitude) < 0.001
+  ));
+  if (exists) {
+    showToast(`${state.place.name} is already saved.`);
+    return;
+  }
+  state.favorites.unshift({ ...state.place });
+  state.favorites = state.favorites.slice(0, 8);
+  saveState();
+  renderPlaces();
+  showToast(`${state.place.name} saved to Places.`);
 });
 
 els.locationBtn.addEventListener("click", () => {
@@ -552,4 +718,32 @@ els.settingTiles.forEach((tile) => {
   });
 });
 
+els.placesList.addEventListener("click", async (event) => {
+  const loadButton = event.target.closest("[data-place-index]");
+  const removeButton = event.target.closest("[data-remove-place]");
+  if (removeButton) {
+    state.favorites.splice(Number(removeButton.dataset.removePlace), 1);
+    saveState();
+    renderPlaces();
+    return;
+  }
+  if (loadButton) {
+    const place = state.favorites[Number(loadButton.dataset.placeIndex)];
+    if (place) await loadWeather(place, `Loaded ${place.name}`);
+  }
+});
+
+function scheduleRefresh() {
+  window.clearInterval(state.refreshTimer);
+  const minutes = Number(state.refreshMins);
+  if (!minutes) return;
+  state.refreshTimer = window.setInterval(() => {
+    loadWeather(state.place, "Forecast refreshed automatically.");
+  }, minutes * 60 * 1000);
+}
+
+loadSavedState();
+updatePreferenceButtons();
+renderPlaces();
+scheduleRefresh();
 loadWeather(state.place);

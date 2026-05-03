@@ -15,6 +15,9 @@ Aurora Weather is currently in beta. The core forecast, UK postcode lookup, and 
 - Independent metric controls for temperature, wind speed, pressure, and rainfall
 - Premium responsive glass UI with animated weather visuals
 - Working side navigation for dashboard, radar, alerts, and settings
+- Changeable forecast models including Best Match, UKMO, ECMWF, and GFS
+- Saved places, auto refresh options, alert sensitivity, theme modes, and hourly range controls
+- Smart daily insights, sun timeline, radar readouts, and weather risk cards
 - Offline/sample fallback forecast if the live API cannot be reached
 
 ## Test On GitHub Pages
