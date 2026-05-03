@@ -620,7 +620,7 @@ function render() {
   els.radarMoisture.textContent = `Moisture ${current.relative_humidity_2m}%`;
   els.radarPressure.textContent = `Pressure ${pressure(current.pressure_msl)}`;
   els.radarCloud.textContent = `Cloud ${current.cloud_cover}%`;
-  els.locationSource.textContent = state.place.source || "City search";
+  if (els.locationSource) els.locationSource.textContent = state.place.source || "City search";
 
   renderHourly(data.hourly);
   renderDetails(current, daily);
