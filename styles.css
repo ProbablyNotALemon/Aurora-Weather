@@ -231,20 +231,6 @@ button {
   transition: 180ms ease;
 }
 
-.rail-item::after {
-  content: "";
-  position: absolute;
-  left: 50%;
-  bottom: 0.28rem;
-  width: 0.35rem;
-  height: 0.35rem;
-  border-radius: 50%;
-  background: var(--accent);
-  opacity: 0;
-  transform: translateX(-50%) scale(0.4);
-  transition: 180ms ease;
-}
-
 .rail-item:hover,
 .rail-item.active {
   color: var(--text);
@@ -254,13 +240,8 @@ button {
 }
 
 .rail-item:hover::before,
-.rail-item.active::before,
-.rail-item.active::after {
+.rail-item.active::before {
   opacity: 1;
-}
-
-.rail-item.active::after {
-  transform: translateX(-50%) scale(1);
 }
 
 .dashboard {
