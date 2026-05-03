@@ -204,13 +204,21 @@ button {
   position: relative;
   z-index: 1;
   display: grid;
-  width: 1.55rem;
-  height: 1.55rem;
+  width: 1.45rem;
+  height: 1.45rem;
   place-items: center;
-  font-size: 1.25rem;
-  line-height: 1;
-  text-align: center;
-  text-decoration: none;
+}
+
+.rail-icon svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.9;
+  overflow: visible;
 }
 
 .rail-item::before {
