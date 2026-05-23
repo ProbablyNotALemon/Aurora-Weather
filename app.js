@@ -85,6 +85,7 @@ const els = {
   insightGrid: document.querySelector("#insightGrid"),
   daylightLabel: document.querySelector("#daylightLabel"),
   sunStats: document.querySelector("#sunStats"),
+  sunDot: document.querySelector(".sun-dot"),
   airQualityStatus: document.querySelector("#airQualityStatus"),
   aqiValue: document.querySelector("#aqiValue"),
   aqiLabel: document.querySelector("#aqiLabel"),
@@ -476,17 +477,33 @@ function renderInsights(current, hourly, daily) {
   `).join("");
 }
 
-function renderSun(daily) {
+function renderSun(current, daily) {
   const sunrise = formatTime(daily.sunrise[0]);
   const sunset = formatTime(daily.sunset[0]);
-  const daylightMs = new Date(daily.sunset[0]) - new Date(daily.sunrise[0]);
-  const daylightHours = Math.max(0, daylightMs / 36e5);
-  els.daylightLabel.textContent = `${daylightHours.toFixed(1)} hours of daylight`;
+  const sunriseDate = new Date(daily.sunrise[0]);
+  const sunsetDate = new Date(daily.sunset[0]);
+  const currentDate = new Date(current.time);
+  const totalMs = sunsetDate - sunriseDate;
+  const elapsedMs = currentDate - sunriseDate;
+  const progress = totalMs > 0 ? Math.min(1, Math.max(0, elapsedMs / totalMs)) : 0;
+  const angle = Math.PI * (1 - progress);
+  const centerX = 50;
+  const centerY = 95;
+  const radius = 40;
+  const sunX = centerX + Math.cos(angle) * radius;
+  const sunY = centerY - Math.sin(angle) * radius;
+
+  els.daylightLabel.textContent = `${Math.max(0, (sunsetDate - sunriseDate) / 36e5).toFixed(1)} hours of daylight`;
   els.sunStats.innerHTML = `
     <span>Sunrise <strong>${sunrise}</strong></span>
     <span>Sunset <strong>${sunset}</strong></span>
     <span>UV max <strong>${Math.round(daily.uv_index_max[0])}</strong></span>
   `;
+
+  if (els.sunDot) {
+    els.sunDot.style.left = `${sunX}%`;
+    els.sunDot.style.top = `${sunY}%`;
+  }
 }
 
 function aqiLabel(value) {
@@ -744,7 +761,7 @@ function render() {
   renderWeek(daily);
   renderAlerts(current, daily);
   renderInsights(current, data.hourly, daily);
-  renderSun(daily);
+  renderSun(current, daily);
   renderAirQuality(state.airQuality);
   renderLifestyle(current, data.hourly, daily, state.airQuality);
   renderChart(data.hourly);

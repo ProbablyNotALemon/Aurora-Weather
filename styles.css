@@ -1183,8 +1183,9 @@ h2 {
 
 .sun-dot {
   position: absolute;
-  left: 62%;
-  top: 28%;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
   width: 2.7rem;
   height: 2.7rem;
   border-radius: 50%;
