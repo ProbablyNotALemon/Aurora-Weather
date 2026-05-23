@@ -4,13 +4,15 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Aurora Weather</title>
+    <meta name="theme-color" content="#071116" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="styles.css?v=20260503-rail-fix" />
+    <link rel="manifest" href="manifest.json" />
+    <link rel="stylesheet" href="styles.css?v=20260503-pro" />
   </head>
   <body>
     <div class="app-shell" data-weather="clear">
@@ -203,6 +205,45 @@
             <div class="sun-stats" id="sunStats"></div>
           </div>
 
+          <div class="panel air-panel">
+            <div class="panel-heading">
+              <div>
+                <p class="section-kicker">Health</p>
+                <h2>Air Quality</h2>
+              </div>
+              <span id="airQualityStatus">Live AQI</span>
+            </div>
+            <div class="aqi-gauge">
+              <div class="aqi-ring">
+                <strong id="aqiValue">--</strong>
+                <span id="aqiLabel">Loading</span>
+              </div>
+              <div class="aqi-bars" id="aqiBars"></div>
+            </div>
+          </div>
+
+          <div class="panel lifestyle-panel">
+            <div class="panel-heading">
+              <div>
+                <p class="section-kicker">Pro Planner</p>
+                <h2>Lifestyle Indexes</h2>
+              </div>
+              <span id="plannerStatus">Personalised</span>
+            </div>
+            <div class="lifestyle-grid" id="lifestyleGrid"></div>
+          </div>
+
+          <div class="panel chart-panel">
+            <div class="panel-heading">
+              <div>
+                <p class="section-kicker">Trend</p>
+                <h2>Temperature Curve</h2>
+              </div>
+              <span id="chartSummary">Next 24 hours</span>
+            </div>
+            <div class="temp-chart" id="tempChart"></div>
+          </div>
+
           <div class="panel alerts-panel" id="alertsView" data-view-section="alerts">
             <div class="panel-heading">
               <div>
@@ -229,6 +270,6 @@
     </div>
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
-    <script src="app.js?v=20260503-rail-fix"></script>
+    <script src="app.js?v=20260503-pro"></script>
   </body>
 </html>

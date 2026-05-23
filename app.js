@@ -10,6 +10,7 @@ const state = {
   themeMode: "atmospheric",
   favorites: [],
   refreshTimer: null,
+  airQuality: null,
   place: {
     name: "London",
     country: "United Kingdom",
@@ -84,6 +85,13 @@ const els = {
   insightGrid: document.querySelector("#insightGrid"),
   daylightLabel: document.querySelector("#daylightLabel"),
   sunStats: document.querySelector("#sunStats"),
+  airQualityStatus: document.querySelector("#airQualityStatus"),
+  aqiValue: document.querySelector("#aqiValue"),
+  aqiLabel: document.querySelector("#aqiLabel"),
+  aqiBars: document.querySelector("#aqiBars"),
+  lifestyleGrid: document.querySelector("#lifestyleGrid"),
+  chartSummary: document.querySelector("#chartSummary"),
+  tempChart: document.querySelector("#tempChart"),
   placesCount: document.querySelector("#placesCount"),
   placesList: document.querySelector("#placesList"),
   hourlyStrip: document.querySelector("#hourlyStrip"),
@@ -303,6 +311,20 @@ async function fetchForecast(place) {
   return response.json();
 }
 
+async function fetchAirQuality(place) {
+  const params = new URLSearchParams({
+    latitude: place.latitude,
+    longitude: place.longitude,
+    timezone: "auto",
+    current: "european_aqi,pm10,pm2_5,carbon_monoxide,nitrogen_dioxide,ozone,uv_index",
+    hourly: "european_aqi,pm2_5,pm10,uv_index",
+    forecast_days: "2",
+  });
+  const response = await fetch(`https://air-quality-api.open-meteo.com/v1/air-quality?${params}`);
+  if (!response.ok) throw new Error("Air quality request failed");
+  return response.json();
+}
+
 function fallbackForecast() {
   const now = new Date();
   const hours = Array.from({ length: 168 }, (_, index) => {
@@ -365,6 +387,26 @@ function fallbackForecast() {
       uv_index_max: days.map((item) => item.uv),
       sunrise: days.map((item) => item.sunrise),
       sunset: days.map((item) => item.sunset),
+    },
+  };
+}
+
+function fallbackAirQuality() {
+  return {
+    current: {
+      european_aqi: 32,
+      pm10: 18,
+      pm2_5: 8,
+      carbon_monoxide: 160,
+      nitrogen_dioxide: 14,
+      ozone: 58,
+      uv_index: 4,
+    },
+    hourly: {
+      european_aqi: Array.from({ length: 48 }, (_, index) => 28 + Math.round(Math.sin(index / 4) * 12)),
+      pm2_5: Array.from({ length: 48 }, (_, index) => 7 + Math.max(0, Math.sin(index / 5) * 4)),
+      pm10: Array.from({ length: 48 }, (_, index) => 17 + Math.max(0, Math.cos(index / 4) * 6)),
+      uv_index: Array.from({ length: 48 }, (_, index) => Math.max(0, Math.sin((index - 6) / 6) * 6)),
     },
   };
 }
@@ -445,6 +487,81 @@ function renderSun(daily) {
     <span>Sunset <strong>${sunset}</strong></span>
     <span>UV max <strong>${Math.round(daily.uv_index_max[0])}</strong></span>
   `;
+}
+
+function aqiLabel(value) {
+  if (value <= 20) return "Excellent";
+  if (value <= 40) return "Good";
+  if (value <= 60) return "Moderate";
+  if (value <= 80) return "Poor";
+  return "Very poor";
+}
+
+function renderAirQuality(airQuality) {
+  const current = airQuality?.current || fallbackAirQuality().current;
+  const aqi = Math.round(current.european_aqi ?? 0);
+  els.aqiValue.textContent = aqi;
+  els.aqiLabel.textContent = aqiLabel(aqi);
+  els.airQualityStatus.textContent = `${aqiLabel(aqi)} air`;
+  const pollutants = [
+    ["PM2.5", current.pm2_5, 25],
+    ["PM10", current.pm10, 50],
+    ["NO₂", current.nitrogen_dioxide, 40],
+    ["O₃", current.ozone, 120],
+  ];
+  els.aqiBars.innerHTML = pollutants.map(([label, value, limit]) => `
+    <div class="aqi-bar">
+      <span>${label}</span>
+      <strong>${Math.round(value ?? 0)}</strong>
+      <div class="meter"><span style="--value: ${Math.min(100, ((value || 0) / limit) * 100)}%"></span></div>
+    </div>
+  `).join("");
+}
+
+function clampScore(score) {
+  return Math.max(0, Math.min(100, Math.round(score)));
+}
+
+function renderLifestyle(current, hourly, daily, airQuality) {
+  const rain = daily.precipitation_probability_max[0];
+  const wind = current.wind_speed_10m;
+  const humidity = current.relative_humidity_2m;
+  const uv = daily.uv_index_max[0];
+  const aqi = airQuality?.current?.european_aqi ?? 35;
+  const items = [
+    ["Commute", clampScore(100 - rain * 0.55 - wind * 0.8), rain > 55 ? "Wet routes likely" : "Smooth travel window"],
+    ["Running", clampScore(105 - rain - wind * 1.2 - Math.max(0, aqi - 35)), wind > 30 ? "Sheltered route advised" : "Good outdoor pace"],
+    ["Laundry", clampScore(95 - rain * 1.1 - humidity * 0.35), humidity > 78 ? "Slow drying" : "Decent drying conditions"],
+    ["Garden", clampScore(70 + rain * 0.25 - wind * 0.5), rain < 20 ? "Watering may help" : "Natural watering likely"],
+    ["Solar", clampScore(100 - current.cloud_cover - rain * 0.25), current.cloud_cover > 65 ? "Reduced generation" : "Strong light potential"],
+    ["Skin", clampScore(100 - uv * 9), uv >= 6 ? "Use strong protection" : "Lower sun exposure"],
+  ];
+  els.lifestyleGrid.innerHTML = items.map(([label, score, note]) => `
+    <article class="lifestyle-card">
+      <div>
+        <span>${label}</span>
+        <strong>${score}</strong>
+      </div>
+      <div class="score-track"><span style="--value: ${score}%"></span></div>
+      <p>${note}</p>
+    </article>
+  `).join("");
+}
+
+function renderChart(hourly) {
+  const temps = hourly.temperature_2m.slice(0, 24);
+  const min = Math.min(...temps);
+  const max = Math.max(...temps);
+  const range = Math.max(1, max - min);
+  els.chartSummary.textContent = `${temp(max)} peak · ${temp(min)} low`;
+  els.tempChart.innerHTML = temps.map((value, index) => {
+    const height = 18 + ((value - min) / range) * 72;
+    return `
+      <div class="chart-column" title="${formatTime(hourly.time[index])} ${temp(value)}">
+        <span style="height: ${height}%"></span>
+      </div>
+    `;
+  }).join("");
 }
 
 function renderPlaces() {
@@ -628,19 +745,29 @@ function render() {
   renderAlerts(current, daily);
   renderInsights(current, data.hourly, daily);
   renderSun(daily);
+  renderAirQuality(state.airQuality);
+  renderLifestyle(current, data.hourly, daily, state.airQuality);
+  renderChart(data.hourly);
   renderPlaces();
 }
 
 async function loadWeather(place, toastMessage) {
   try {
     state.place = place;
-    state.forecast = await fetchForecast(place);
+    const [forecast, airQuality] = await Promise.allSettled([
+      fetchForecast(place),
+      fetchAirQuality(place),
+    ]);
+    if (forecast.status !== "fulfilled") throw new Error("Forecast request failed");
+    state.forecast = forecast.value;
+    state.airQuality = airQuality.status === "fulfilled" ? airQuality.value : fallbackAirQuality();
     updatePreferenceButtons();
     saveState();
     render();
     if (toastMessage) showToast(toastMessage);
   } catch (error) {
     state.forecast = fallbackForecast();
+    state.airQuality = fallbackAirQuality();
     updatePreferenceButtons();
     render();
     showToast("Live weather could not be reached, so Aurora is showing a polished sample forecast.");
@@ -747,3 +874,9 @@ updatePreferenceButtons();
 renderPlaces();
 scheduleRefresh();
 loadWeather(state.place);
+
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("sw.js").catch(() => {});
+  });
+}

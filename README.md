@@ -18,11 +18,13 @@ Aurora Weather is currently in beta. The core forecast, UK postcode lookup, and 
 - Changeable forecast models including Best Match, UKMO, ECMWF, and GFS
 - Saved places, auto refresh options, alert sensitivity, theme modes, and hourly range controls
 - Smart daily insights, sun timeline, radar readouts, and weather risk cards
+- Air quality monitoring, lifestyle indexes, and a 24-hour temperature trend chart
+- PWA install support with offline app-shell caching
 - Offline/sample fallback forecast if the live API cannot be reached
 
 ## Test On GitHub Pages
 
-1. Upload `index.html`, `settings.html`, `styles.css`, `settings.css`, `app.js`, `settings.js`, and `README.md` to a GitHub repository.
+1. Upload all project files to a GitHub repository, including `manifest.json` and `sw.js`.
 2. Open the repository settings.
 3. Go to **Pages**.
 4. Choose **Deploy from a branch**.

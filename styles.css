@@ -996,7 +996,10 @@ h2 {
 .settings-panel,
 .places-panel,
 .insight-panel,
-.sun-panel {
+.sun-panel,
+.air-panel,
+.lifestyle-panel,
+.chart-panel {
   grid-column: span 1;
 }
 
@@ -1004,7 +1007,8 @@ h2 {
 .settings-grid,
 .insight-grid,
 .places-list,
-.sun-stats {
+.sun-stats,
+.lifestyle-grid {
   display: grid;
   gap: 0.7rem;
   padding: 0 1.1rem 1.15rem;
@@ -1244,6 +1248,123 @@ h2 {
   padding: 1rem;
 }
 
+.aqi-gauge {
+  display: grid;
+  grid-template-columns: 10rem minmax(0, 1fr);
+  gap: 1rem;
+  padding: 0 1.1rem 1.15rem;
+}
+
+.aqi-ring {
+  display: grid;
+  width: 10rem;
+  height: 10rem;
+  place-items: center;
+  align-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(7, 17, 22, 0.9) 0 52%, transparent 53%),
+    conic-gradient(var(--good), var(--accent), #ff6b6b, var(--good));
+  box-shadow: 0 0 54px rgba(76, 201, 240, 0.14), var(--inner-glow);
+}
+
+.aqi-ring strong {
+  font-size: 2.8rem;
+  line-height: 1;
+}
+
+.aqi-ring span,
+.aqi-bar span,
+.lifestyle-card span,
+.lifestyle-card p {
+  color: var(--muted);
+}
+
+.aqi-bars {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.aqi-bar {
+  display: grid;
+  grid-template-columns: 4rem 3rem minmax(0, 1fr);
+  gap: 0.7rem;
+  align-items: center;
+  padding: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 0.9rem;
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.lifestyle-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.lifestyle-card {
+  display: grid;
+  gap: 0.7rem;
+  padding: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: var(--inner-glow);
+}
+
+.lifestyle-card div:first-child {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.lifestyle-card strong {
+  font-size: 1.8rem;
+}
+
+.lifestyle-card p {
+  margin: 0;
+}
+
+.score-track {
+  height: 0.55rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.13);
+}
+
+.score-track span {
+  display: block;
+  width: var(--value);
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #ff6b6b, var(--accent), var(--good));
+}
+
+.temp-chart {
+  display: grid;
+  grid-template-columns: repeat(24, minmax(0, 1fr));
+  align-items: end;
+  gap: 0.28rem;
+  height: 13rem;
+  padding: 0.4rem 1.1rem 1.15rem;
+}
+
+.chart-column {
+  display: grid;
+  align-items: end;
+  height: 100%;
+  min-width: 0.35rem;
+}
+
+.chart-column span {
+  display: block;
+  min-height: 0.4rem;
+  border-radius: 999px 999px 0.3rem 0.3rem;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.9), var(--accent) 48%, var(--accent-2));
+  box-shadow: 0 0 18px color-mix(in srgb, var(--accent) 30%, transparent);
+}
+
 [data-view-section] {
   scroll-margin-top: 1.3rem;
 }
@@ -1378,7 +1499,10 @@ h2 {
   .settings-panel,
   .places-panel,
   .insight-panel,
-  .sun-panel {
+  .sun-panel,
+  .air-panel,
+  .lifestyle-panel,
+  .chart-panel {
     grid-column: span 1;
   }
 
@@ -1430,8 +1554,18 @@ h2 {
   .radar-readouts,
   .insight-grid,
   .sun-stats,
-  .settings-block {
+  .settings-block,
+  .aqi-gauge,
+  .lifestyle-grid {
     grid-template-columns: 1fr;
+  }
+
+  .aqi-ring {
+    justify-self: center;
+  }
+
+  .temp-chart {
+    gap: 0.18rem;
   }
 
   .day-row {
