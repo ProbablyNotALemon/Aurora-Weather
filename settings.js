@@ -68,12 +68,19 @@ function renderPlaces() {
   `).join("");
 }
 
+const unitLabels = {
+  tempUnit: { c: "°C", f: "°F" },
+  windUnit: { kmh: "km/h", mph: "mph" },
+  pressureUnit: { hpa: "hPa", inhg: "inHg" },
+  precipUnit: { mm: "mm", in: "in" },
+};
+
 function render() {
   shell.dataset.theme = settings.themeMode;
   optionCards.forEach((card) => {
     card.classList.toggle("active", settings[card.dataset.preference] === card.dataset.value);
   });
-  profileSummary.textContent = `${modelNames[settings.forecastModel]} · ${settings.tempUnit.toUpperCase()} · ${settings.windUnit}`;
+  profileSummary.textContent = `${modelNames[settings.forecastModel]} · ${unitLabels.tempUnit[settings.tempUnit]} · ${unitLabels.windUnit[settings.windUnit]}`;
   modelSummary.textContent = modelNames[settings.forecastModel];
   renderPlaces();
 }
