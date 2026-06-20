@@ -22,13 +22,4 @@ Aurora Weather is currently in beta. The core forecast, UK postcode lookup, and 
 - PWA install support with offline app-shell caching
 - Offline/sample fallback forecast if the live API cannot be reached
 
-## Test On GitHub Pages
-
-1. Upload all project files to a GitHub repository, including `manifest.json` and `sw.js`.
-2. Open the repository settings.
-3. Go to **Pages**.
-4. Choose **Deploy from a branch**.
-5. Select your main branch and root folder.
-6. Open the generated GitHub Pages URL once it finishes deploying.
-
-No build step or API key is required.
+## Made by ProbablyNotALemon and CodeX AI
