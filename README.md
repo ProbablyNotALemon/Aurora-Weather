@@ -23,3 +23,4 @@ Aurora Weather is currently in beta. The core forecast, UK postcode lookup, and 
 - Offline/sample fallback forecast if the live API cannot be reached
 
 ## Made by ProbablyNotALemon and CodeX AI
+## https://probablynotalemon.github.io/Aurora-Weather/
