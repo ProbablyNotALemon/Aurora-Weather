@@ -2,6 +2,16 @@
 
 A polished static weather dashboard built with HTML, CSS, and JavaScript.
 
+## Screenshots
+<img width="2560" height="1305" alt="Screenshot_20261011_185213" src="https://github.com/user-attachments/assets/47460b9b-e6df-400b-89fe-4188e924457a" />
+
+<img width="2560" height="1305" alt="image" src="https://github.com/user-attachments/assets/12970e73-a726-4c6f-82d8-532a8f778e2d" />
+
+<img width="2560" height="1305" alt="image" src="https://github.com/user-attachments/assets/a677b444-fe9e-4630-a7a7-50e1ded29987" />
+
+<img width="2560" height="1305" alt="image" src="https://github.com/user-attachments/assets/8442e649-907d-4e10-9876-27d4be9f6642" />
+
+
 ## Beta Notice
 
 Aurora Weather is currently in beta. The core forecast, UK postcode lookup, and responsive UI are working, but live weather data depends on third-party public APIs and may occasionally be limited, delayed, or unavailable.
