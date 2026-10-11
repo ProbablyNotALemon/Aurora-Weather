@@ -16,16 +16,16 @@ A hyper-polished, feature-dense static weather dashboard engineered with a premi
 <summary><b>📐 Expand Dashboard Screenshots</b></summary>
 <br />
 
-### Control Room & Engine Settings
+### Main Menu
 <img width="2560" height="1305" alt="Aurora Control Room Settings" src="https://github.com/user-attachments/assets/47460b9b-e6df-400b-89fe-4188e924457a" />
 
-### Main Dashboard Interface
+### Conditions
 <img width="2560" height="1305" alt="Main Dashboard Layout" src="https://github.com/user-attachments/assets/12970e73-a726-4c6f-82d8-532a8f778e2d" />
 
-### Analytics & Micro-Metrics
+### Risks and Analytics
 <img width="2560" height="1305" alt="Analytics and Metrics View" src="https://github.com/user-attachments/assets/a677b444-fe9e-4630-a7a7-50e1ded29987" />
 
-### PWA Mobile Layout
+### Settings
 <img width="2560" height="1305" alt="PWA Interface View" src="https://github.com/user-attachments/assets/8442e649-907d-4e10-9876-27d4be9f6642" />
 
 </details>
